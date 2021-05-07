@@ -1,0 +1,6 @@
+﻿1.Model becomes null after first foreach in view ... 
+Cause is unidentified
+
+2.Back to home page button isnt working because of 1 point 
+
+
