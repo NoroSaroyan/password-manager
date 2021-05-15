@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using PasswordManager.Models;
 using PasswordManager.Models.Authorization;
+using PasswordManager.Models.User;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,16 +19,69 @@ namespace PasswordManager.Controllers
     {
         private readonly ILogger<HomeController> _logger;
 
+        [HttpPost]
+        [AllowAnonymous]
+        [ValidateAntiForgeryToken]
+        public IActionResult Create(Account acc)
+        {
+            string currentUserName = LoginController.currentUser.UserName;
+            if (Account.CreateAccount(acc, currentUserName))
+            {
+                Console.WriteLine("Success");
+            }
+            else
+            {
+                throw new Exception("Failure");
+            }
+
+            return View("../Home/Index" , LoginController.currentUser.GetAccounts());
+        }
+
+        public IActionResult Delete(string Id)
+        {
+            if (Account.Delete(Id))
+            {
+                ViewBag.Message = "Success";
+            }
+            else
+            {
+                ViewBag.Message = "Failure";
+            }
+            return View("../Home/Index",LoginController.currentUser.GetAccounts());
+        }
+        public IActionResult Edit(string id)
+        {
+           Account acc = LoginController.currentUser.GetAccounts().FirstOrDefault(x => x.Id == id);
+            return View("../Home/Edit", acc );
+        }
+        [HttpPost]
+        public IActionResult Edit(Account account)
+        {
+            User user = LoginController.currentUser;
+            if (Account.Edit(account))
+            {
+                ViewBag.Message = "Success";
+            }
+            else
+            {
+                ViewBag.Message = "Failure";
+            }
+            return View("../Home/Index", LoginController.currentUser.GetAccounts());
+        }
+
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
         }
 
-
-        
         public IActionResult Index()
         {
-            return View();
+            if (LoginController.currentUser == null)
+            {
+                return View("../Login/Index");
+            }
+            return View("../Home/Index", LoginController.currentUser.GetAccounts());
+
         }
 
         public IActionResult Privacy()
@@ -39,31 +93,6 @@ namespace PasswordManager.Controllers
         {
             return View();
         }
-
-        [HttpPost]
-        [AllowAnonymous]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(Account acc)
-        {
-           var u = TempData["mycustom"];
-           var u2 = this.TempData["mycustom"];
-
-
-            //"noriksaroyan@gmail.com"
-            if (Account.CreateAccount(acc, "noriksaroyan@gmail.com"))
-            {
-
-
-                Console.WriteLine("NICE");
-            }
-            else
-            {
-                throw new Exception("WTF??");
-            }
-
-            return View("../Home/Create");
-        }
-
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

@@ -14,7 +14,7 @@ namespace PasswordManager.Models.User
         /// <summary>
         /// User's SignIn Username
         /// </summary>
-        public string UserName { get;  set; }
+        public string UserName { get; set; }
 
         /// <summary>
         /// User's SignIn password 
@@ -62,7 +62,6 @@ namespace PasswordManager.Models.User
                     string query = "Select * from [PasswordManager].[dbo].[users] where  password=@Password and name=@UserName ";
                     //string query = string.Format("Select * from [PasswordManager].[dbo].[users] where name='{0}' and  password='{1}' ", user.UserName , user.Password);
 
-
                     SqlCommand cmd = new SqlCommand(query, conn);
                     cmd.Parameters.Add("@Password", SqlDbType.NVarChar, 50).Value = this.Password;
                     cmd.Parameters.Add("@UserName", SqlDbType.NVarChar, 50).Value = this.UserName;
@@ -101,49 +100,46 @@ namespace PasswordManager.Models.User
                 this.Login();
         }
 
-
         public ICollection<Account> GetAccounts()
         {
-            if (this.IsLogin)
+            if (this.IsLogin == false)
             {
-                try
-                {
-                    //"Persist Security Info=False;User ID=noriksDB;Password=1234;Initial Catalog=AdventureWorks;Server=DESKTOP-P18ASPH\SQLEXPRESS;"
-                    using (SqlConnection conn = new SqlConnection(@"Persist Security Info=False;User ID=noriksDB;Password=1234;Initial Catalog=PasswordManager;Server=DESKTOP-P18ASPH\SQLEXPRESS;"))
-                    {
-                        conn.Open();
-                        // TODO  
-                        string query = "Select * from [PasswordManager].[dbo].[accounts] where username=@UserName";
-
-                        SqlCommand cmd = new SqlCommand(query, conn);
-                        cmd.Parameters.Add("@UserName", SqlDbType.NVarChar, 50).Value = this.UserName;
-
-                        using (SqlDataReader dr = cmd.ExecuteReader()){
-                            while (dr.Read())
-                            {
-                                object id = dr["id"];
-                                object pl = dr["platform"];
-                                object l = dr["login"];
-                                object psw = dr["password"];
-                                object uname = dr["username"];
-                                
-                                Account account = new Account(pl.ToString(), l.ToString(),psw.ToString());
-                                this.Accounts.Add(account);
-                                
-                            }
-                        }
-
-                        return this.Accounts;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex);
-                    throw;
-                }
-
+                return this.Accounts;
             }
-            return this.Accounts;
+            this.Accounts.Clear();
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(@"Persist Security Info=False;User ID=noriksDB;Password=1234;Initial Catalog=PasswordManager;Server=DESKTOP-P18ASPH\SQLEXPRESS;"))
+                {
+                    conn.Open();
+                    // TODO  
+                    string query = "Select * from [PasswordManager].[dbo].[accounts] where username=@UserName";
+                    SqlCommand cmd = new SqlCommand(query, conn);
+                    cmd.Parameters.Add("@UserName", SqlDbType.NVarChar, 50).Value = this.UserName;
+
+                    using (SqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            object id = dr["id"];
+                            object pl = dr["platform"];
+                            object l = dr["login"];
+                            object psw = dr["password"];
+                            object uname = dr["username"];
+
+                            Account account = new Account(id.ToString() , pl.ToString(), l.ToString(), psw.ToString());
+                            this.Accounts.Add(account);
+                        }
+                    }
+                    return this.Accounts;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                throw;
+            }
+
         }
     }
 }
